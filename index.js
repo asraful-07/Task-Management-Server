@@ -43,6 +43,59 @@ async function run() {
       res.send(result);
     });
 
+    // get a biodata by id
+    app.get("/job-tasks/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await tasksCollection.findOne(query);
+      res.send(result);
+    });
+
+    // update a biodata in db
+    app.put("/task-edit/:id", async (req, res) => {
+      const id = req.params.id;
+      const editData = req.body;
+
+      // Validate that required fields are present
+      if (!editData.title || !editData.category) {
+        return res.status(400).send("Title and category are required.");
+      }
+
+      // Ensure that the ID is valid
+      if (!ObjectId.isValid(id)) {
+        return res.status(400).send("Invalid task ID.");
+      }
+
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: false };
+      const updateDoc = {
+        $set: {
+          title: editData.title,
+          description: editData.description,
+          category: editData.category,
+          timestamp: new Date().toISOString(),
+        },
+      };
+
+      try {
+        const result = await tasksCollection.updateOne(
+          query,
+          updateDoc,
+          options
+        );
+
+        // Check if any document was updated
+        if (result.modifiedCount === 0) {
+          return res.status(404).send("Task not found or no changes made.");
+        }
+
+        res.send({ message: "Task updated successfully", data: result });
+      } catch (error) {
+        console.error("Error updating task:", error);
+        res.status(500).send("Error updating task.");
+      }
+    });
+
     // Cancel/delete an order
     app.delete("/tasks/:id", async (req, res) => {
       const id = req.params.id;
