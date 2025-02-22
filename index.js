@@ -105,11 +105,27 @@ async function run() {
     });
 
     // get all biodata posted by a specific user
-    app.get("/task/:email", async (req, res) => {
+    app.get("/tasks/user/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await tasksCollection.find(query).toArray();
       res.send(result);
+    });
+
+    // Update order and category
+    app.patch("/tasks/update-category-order/:id", async (req, res) => {
+      const { id } = req.params;
+      const { category, order } = req.body;
+      try {
+        const result = await tasksCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { category: category } }
+        );
+
+        res.send({ message: "Task marked as completed", data: result });
+      } catch (error) {
+        res.status(500).send({ error: "Failed to Update order and category" });
+      }
     });
 
     // new Users related data
